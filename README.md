@@ -1,4 +1,4 @@
-# cloth-sim
+# clothsim
 
 A real-time cloth simulation written in **C++17** using **OpenGL 3.3**, **GLM**, and **Dear ImGui**. Physics are based on a mass-spring model with Verlet integration and maximum-stretch constraint satisfaction, following [Matt Fisher's Cloth Tutorial (Stanford, 2014)](https://graphics.stanford.edu/~mdfisher/cloth.html).
 
@@ -52,8 +52,8 @@ brew install cmake
 ### 1. Clone the repo with submodules
 
 ```bash
-git clone --recursive https://github.com/YOUR_USERNAME/cloth-sim.git
-cd cloth-sim
+git clone --recursive https://github.com/YOUR_USERNAME/clothsim.git
+cd clothsim
 ```
 
 If you already cloned without `--recursive`, fetch the submodules now:
@@ -70,19 +70,19 @@ cd build
 cmake .. -G Xcode
 ```
 
-This produces a `cloth-sim.xcodeproj` inside the `build/` directory.
+This produces a `clothsim.xcodeproj` inside the `build/` directory.
 
 ### 3. Open in Xcode
 
 ```bash
-open cloth-sim.xcodeproj
+open clothsim.xcodeproj
 ```
 
-Or double-click `cloth-sim.xcodeproj` in Finder.
+Or double-click `clothsim.xcodeproj` in Finder.
 
 ### 4. Build and run
 
-In Xcode, select the **cloth-sim** scheme from the scheme selector at the top, then press **⌘R** to build and run.
+In Xcode, select the **clothsim** scheme from the scheme selector at the top, then press **⌘R** to build and run.
 
 > You can also build from the command line without opening Xcode:
 > ```bash
@@ -94,7 +94,7 @@ In Xcode, select the **cloth-sim** scheme from the scheme selector at the top, t
 ## Project Structure
 
 ```
-cloth-sim/
+clothsim/
 ├── CMakeLists.txt          # Build definition
 ├── README.md
 ├── CLAUDE.md               # AI assistant project plan
@@ -134,7 +134,7 @@ Below is the full `CMakeLists.txt` for the project. Copy this to the root of the
 
 ```cmake
 cmake_minimum_required(VERSION 3.20)
-project(cloth-sim LANGUAGES C CXX)
+project(clothsim LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -171,9 +171,9 @@ target_include_directories(glad PUBLIC external/glad/include)
 # ── Main executable ───────────────────────────────────────────────────────────
 file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.h)
 
-add_executable(cloth-sim ${SRC_FILES})
+add_executable(clothsim ${SRC_FILES})
 
-target_include_directories(cloth-sim PRIVATE
+target_include_directories(clothsim PRIVATE
     src/
     external/glm
     external/glad/include
@@ -181,7 +181,7 @@ target_include_directories(cloth-sim PRIVATE
     ${IMGUI_DIR}/backends
 )
 
-target_link_libraries(cloth-sim PRIVATE
+target_link_libraries(clothsim PRIVATE
     glfw
     glad
     imgui
@@ -190,7 +190,7 @@ target_link_libraries(cloth-sim PRIVATE
 
 # macOS: link required system frameworks
 if(APPLE)
-    target_link_libraries(cloth-sim PRIVATE
+    target_link_libraries(clothsim PRIVATE
         "-framework OpenGL"
         "-framework Cocoa"
         "-framework IOKit"
@@ -199,10 +199,10 @@ if(APPLE)
 endif()
 
 # Copy shaders next to the executable so relative paths work
-add_custom_command(TARGET cloth-sim POST_BUILD
+add_custom_command(TARGET clothsim POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/shaders
-        $<TARGET_FILE_DIR:cloth-sim>/shaders
+        $<TARGET_FILE_DIR:clothsim>/shaders
     COMMENT "Copying shaders to build directory"
 )
 ```
@@ -274,7 +274,7 @@ Run `git submodule update --init --recursive` from the repo root.
 Ensure `GLFW_OPENGL_FORWARD_COMPAT` is set to `GL_TRUE` in the window hints (already handled in `main.cpp`). macOS requires the forward-compatible flag for core profile contexts.
 
 **Shaders not found at runtime**
-Make sure you are running the executable from Xcode (which sets the working directory to the build output folder where shaders are copied). If running from Terminal, `cd` to the directory containing the `cloth-sim` binary first.
+Make sure you are running the executable from Xcode (which sets the working directory to the build output folder where shaders are copied). If running from Terminal, `cd` to the directory containing the `clothsim` binary first.
 
 ---
 
