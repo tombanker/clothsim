@@ -14,12 +14,6 @@
 #include <iostream>
 #include <vector>
 
-// ── Constants ────────────────────────────────────────────────────────────────
-static constexpr int  WINDOW_WIDTH  = 1280;
-static constexpr int  WINDOW_HEIGHT = 720;
-static constexpr char WINDOW_TITLE[] = "Cloth Simulation";
-static constexpr char GLSL_VERSION[] = "#version 330 core";
-
 // ── Shaders ──────────────────────────────────────────────────────────────────
 // Simple MVP transform — just positions, flat white color for now.
 // Will be replaced by Phong shaders in Phase 4.
@@ -143,10 +137,6 @@ int main()
     ImGui_ImplOpenGL3_Init(GLSL_VERSION);
 
     // ── Cloth ─────────────────────────────────────────────────────────────────
-    constexpr int   CLOTH_ROWS    = 30;
-    constexpr int   CLOTH_COLS    = 30;
-    constexpr float CLOTH_SPACING = 0.1f;
-
     Cloth cloth(CLOTH_ROWS, CLOTH_COLS, CLOTH_SPACING);
 
     // ── GPU buffers for particle positions ───────────────────────────────────
@@ -184,17 +174,15 @@ int main()
     // ── Camera / projection ──────────────────────────────────────────────────
     // Simple fixed camera looking at the cloth from a slight angle.
     // In Phase 4 we'll add proper camera controls.
-    glm::mat4 proj = glm::perspective(glm::radians(45.f),
+    glm::mat4 proj = glm::perspective(glm::radians(CAMERA_FOV),
                                       (float)WINDOW_WIDTH / WINDOW_HEIGHT,
-                                      0.01f, 100.f);
+                                      CAMERA_NEAR, CAMERA_FAR);
 
-    glm::vec3 cameraPos = { 0.f, 1.f, 8.5f };
+    glm::vec3 cameraPos = DEFAULT_CAMERA_POS;
+    glm::vec3 cameraTarget = DEFAULT_CAMERA_TARGET;
+    glm::vec3 cameraUp = DEFAULT_CAMERA_UP;
 
-    glm::mat4 view = glm::lookAt(
-                                 cameraPos,   // camera position
-        glm::vec3(0.f, 0.5f, 0.f),   // look-at target (center of cloth)
-        glm::vec3(0.f, 1.f, 0.f)     // up vector
-    );
+    glm::mat4 view = glm::lookAt(cameraPos,cameraTarget, cameraUp);
     glm::mat4 model = glm::mat4(1.f);
     glm::mat4 MVP   = proj * view * model;
 
@@ -281,11 +269,7 @@ int main()
         ImGui::End();
 
         // Recompute MVP every frame so camera changes take effect immediately
-        glm::mat4 view = glm::lookAt(
-            cameraPos,
-            glm::vec3(0.f, 0.5f, 0.f),
-            glm::vec3(0.f, 1.f,  0.f)
-        );
+        glm::mat4 view = glm::lookAt(cameraPos,cameraTarget, cameraUp);
         glm::mat4 MVP = proj * view * model;
 
         // ── Render ────────────────────────────────────────────────────────────

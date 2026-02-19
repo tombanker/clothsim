@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Constants.h"
 #include "Particle.h"
 #include "Spring.h"
 
@@ -32,12 +33,12 @@ public:
     // Simulation parameters (public so ImGui can write to them directly)
     glm::vec3 gravity         = { 0.f, -9.8f, 0.f };
     float     airDamping      = 0.01f;
-    float     springStiffness = 500.f;
-    float     bendStiffness   = 50.f;
-    float     springDamping   = 0.1f;
-    float     maxStretch      = 1.10f;
-    float     maxCompress     = 0.90f;
-    int       constraintIters = 15;
+    float     springStiffness = DEFAULT_SPRING_STIFFNESS;
+    float     bendStiffness   = DEFAULT_BEND_STIFFNESS;
+    float     springDamping   = DEFAULT_SPRING_DAMPING;
+    float     maxStretch      = DEFAULT_MAX_STRETCH;
+    float     maxCompress     = DEFAULT_MAX_COMPRESS;
+    int       constraintIters = DEFAULT_CONSTRAINT_ITERS;
 
 private:
     // Helper: flat index from (row, col)
