@@ -4,7 +4,7 @@
 #include <cmath>
 #include <algorithm>
 
-// ── Constructor ──────────────────────────────────────────────────────────────
+// MARK: Constructor
 Cloth::Cloth(int rows, int cols, float spacing)
     : rows(rows), cols(cols), spacing(spacing)
 {
@@ -12,7 +12,7 @@ Cloth::Cloth(int rows, int cols, float spacing)
     buildSprings();
 }
 
-// ── Reset ────────────────────────────────────────────────────────────────────
+// MARK: Reset
 void Cloth::reset()
 {
     particles.clear();
@@ -21,7 +21,7 @@ void Cloth::reset()
     buildSprings();
 }
 
-// ── Pin helpers ──────────────────────────────────────────────────────────────
+// MARK: Pin helpers
 void Cloth::pin(int row, int col)
 {
     particles[idx(row, col)].pinned = true;
@@ -33,7 +33,7 @@ void Cloth::unpinAll()
         p.pinned = false;
 }
 
-// ── Build particles ──────────────────────────────────────────────────────────
+// MARK: Build particles
 void Cloth::buildParticles()
 {
     particles.reserve(rows * cols);
@@ -48,9 +48,7 @@ void Cloth::buildParticles()
         for (int c = 0; c < cols; ++c)
         {
             Particle p;
-            p.position     = { startX + c * spacing,
-                                startY - r * spacing,
-                                0.f };
+            p.position     = { startX + c * spacing, startY - r * spacing, 0.f };
             p.prevPosition = p.position;   // Verlet: at rest, prev == current
             p.velocity     = { 0.f, 0.f, 0.f };
             p.force        = { 0.f, 0.f, 0.f };
@@ -65,7 +63,7 @@ void Cloth::buildParticles()
     pin(0, cols - 1);
 }
 
-// ── Build springs ────────────────────────────────────────────────────────────
+// MARK: Build springs
 void Cloth::buildSprings()
 {
     float diagSpacing   = spacing * std::sqrt(2.f);
@@ -76,7 +74,7 @@ void Cloth::buildSprings()
     {
         for (int c = 0; c < cols; ++c)
         {
-            // ── Structural ───────────────────────────────────────────────────
+            // Structural
             // right neighbor
             if (c + 1 < cols)
                 addSpring(idx(r, c), idx(r, c + 1), springStiffness, SpringType::Structural);
@@ -84,7 +82,7 @@ void Cloth::buildSprings()
             if (r + 1 < rows)
                 addSpring(idx(r, c), idx(r + 1, c), springStiffness, SpringType::Structural);
 
-            // ── Shear ────────────────────────────────────────────────────────
+            // Shear
             // diagonal down-right
             if (r + 1 < rows && c + 1 < cols)
                 addSpring(idx(r, c), idx(r + 1, c + 1), springStiffness, SpringType::Shear);
@@ -92,7 +90,7 @@ void Cloth::buildSprings()
             if (r + 1 < rows && c - 1 >= 0)
                 addSpring(idx(r, c), idx(r + 1, c - 1), springStiffness, SpringType::Shear);
 
-            // ── Bending ──────────────────────────────────────────────────────
+            // Bending
             // two-ring right
             if (c + 2 < cols)
                 addSpring(idx(r, c), idx(r, c + 2), bendStiffness, SpringType::Bending);
@@ -103,7 +101,7 @@ void Cloth::buildSprings()
     }
 }
 
-// ── addSpring helper ─────────────────────────────────────────────────────────
+// MARK: addSpring helper
 void Cloth::addSpring(int a, int b, float stiffness, SpringType type)
 {
     Spring s;
@@ -116,15 +114,19 @@ void Cloth::addSpring(int a, int b, float stiffness, SpringType type)
     springs.push_back(s);
 }
 
-// ── Update (called once per frame) ───────────────────────────────────────────
-void Cloth::update(float dt)
+// MARK: Update (called once per frame)
+void Cloth::update(float deltaTime)
 {
+    // STEP 1: Reset forces and apply Gravity
+    // STEP 2: Apply spring forces
     applyForces();
-    integrate(dt);
+    // STEP 3: Integration
+    integrate(deltaTime);
+    // STEP 4: Constraints (max stretch)
     satisfyConstraints();
 }
 
-// ── Force accumulation ───────────────────────────────────────────────────────
+// MARK: Force accumulation
 void Cloth::applyForces()
 {
     // Reset forces
@@ -169,24 +171,23 @@ void Cloth::applyForces()
     }
 }
 
-// ── Verlet integration ───────────────────────────────────────────────────────
-void Cloth::integrate(float dt)
+// MARK: - Verlet integration
+void Cloth::integrate(float deltaTime)
 {
     for (auto& p : particles)
     {
         if (p.pinned) continue;
-
         glm::vec3 accel    = p.force / p.mass;
-        glm::vec3 newPos   = 2.f * p.position - p.prevPosition + accel * dt * dt;
+        glm::vec3 newPos   = 2.f * p.position - p.prevPosition + accel * deltaTime * deltaTime;
 
         // Recover velocity for damping next frame
-        p.velocity     = (newPos - p.prevPosition) / (2.f * dt);
+        p.velocity     = (newPos - p.prevPosition) / (2.f * deltaTime);
         p.prevPosition = p.position;
         p.position     = newPos;
     }
 }
 
-// ── Constraint satisfaction (max stretch) ────────────────────────────────────
+// MARK: Constraint satisfaction (max stretch)
 void Cloth::satisfyConstraints()
 {
     for (int iter = 0; iter < constraintIters; ++iter)
@@ -221,7 +222,7 @@ void Cloth::satisfyConstraints()
     }
 }
 
-// ── Sphere collision ─────────────────────────────────────────────────────────
+// MARK: Sphere collision
 void Cloth::handleSphereCollision(glm::vec3 center, float radius)
 {
     for (auto& p : particles)
@@ -236,7 +237,7 @@ void Cloth::handleSphereCollision(glm::vec3 center, float radius)
     }
 }
 
-// ── Self collision (marble algorithm) ────────────────────────────────────────
+// MARK: Self collision (marble algorithm)
 void Cloth::handleSelfCollisions()
 {
     float marbleRadius  = spacing * 0.5f;

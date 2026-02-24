@@ -5,7 +5,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-#include "../Cloth.h"
+#include "Cloth.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -26,7 +26,7 @@ uniform mat4 uMVP;
 void main()
 {
     gl_Position = uMVP * vec4(aPos, 1.0);
-    gl_PointSize = 2.0;
+    gl_PointSize = 1.0;
 }
 )";
 
@@ -90,7 +90,7 @@ void key_callback(GLFWwindow* window, int key, int /*scancode*/, int action, int
         glfwSetWindowShouldClose(window, true);
 }
 
-// ── Main ─────────────────────────────────────────────────────────────────────
+// MARK: - Main
 int main()
 {
     // ── Init GLFW ────────────────────────────────────────────────────────────
@@ -146,9 +146,7 @@ int main()
     glGenBuffers(1, &pointVBO);
     glBindVertexArray(pointVAO);
     glBindBuffer(GL_ARRAY_BUFFER, pointVBO);
-    glBufferData(GL_ARRAY_BUFFER,
-                 CLOTH_ROWS * CLOTH_COLS * 3 * sizeof(float),
-                 nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, CLOTH_ROWS * CLOTH_COLS * 3 * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     glBindVertexArray(0);
@@ -159,9 +157,7 @@ int main()
     glGenBuffers(1, &pinnedVBO);
     glBindVertexArray(pinnedVAO);
     glBindBuffer(GL_ARRAY_BUFFER, pinnedVBO);
-    glBufferData(GL_ARRAY_BUFFER,
-                 CLOTH_ROWS * CLOTH_COLS * 3 * sizeof(float), // worst case all pinned
-                 nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, CLOTH_ROWS * CLOTH_COLS * 3 * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     glBindVertexArray(0);
@@ -190,7 +186,7 @@ int main()
     bool  simRunning  = true;
     bool  showParticles = true;
     float bgColor[3]  = { 0.12f, 0.12f, 0.14f };
-    float dt          = 1.f / 60.f;
+    float deltaTime          = DEFAULT_DELTA_TIME;
 
     double lastTime = glfwGetTime();
 
@@ -206,7 +202,7 @@ int main()
 
         // ── Simulate ─────────────────────────────────────────────────────────
         if (simRunning)
-            cloth.update(dt);
+            cloth.update(deltaTime);
 
         // ── Upload particle positions to GPU ──────────────────────────────────
         const auto& particles = cloth.getParticles();
@@ -224,12 +220,10 @@ int main()
             }
         }
         glBindBuffer(GL_ARRAY_BUFFER, pointVBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0,
-                        posData.size() * sizeof(float), posData.data());
+        glBufferSubData(GL_ARRAY_BUFFER, 0, posData.size() * sizeof(float), posData.data());
 
         glBindBuffer(GL_ARRAY_BUFFER, pinnedVBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0,
-                        pinnedData.size() * sizeof(float), pinnedData.data());
+        glBufferSubData(GL_ARRAY_BUFFER, 0, pinnedData.size() * sizeof(float), pinnedData.data());
 
         // ── ImGui ─────────────────────────────────────────────────────────────
         ImGui_ImplOpenGL3_NewFrame();
@@ -243,9 +237,8 @@ int main()
 
         ImGui::Text("Simulation");
         ImGui::Checkbox("Running", &simRunning);
-        if (ImGui::Button("Reset"))
-            cloth.reset();
-        ImGui::SliderFloat("dt", &dt, 0.001f, 0.033f, "%.4f");
+        if (ImGui::Button("Reset")) cloth.reset();
+        ImGui::SliderFloat("Delta Time (ms)", &deltaTime, 0.001f, 0.033f, "%.4f");
         ImGui::Separator();
 
         ImGui::Text("Camera");
@@ -253,12 +246,12 @@ int main()
         ImGui::Separator();
 
         ImGui::Text("Physics");
-        ImGui::SliderFloat3("Gravity",  glm::value_ptr(cloth.gravity), -20.f, 20.f);
+        ImGui::SliderFloat3("Gravity", glm::value_ptr(cloth.gravity), -20.f, 20.f);
         ImGui::SliderFloat("Stiffness", &cloth.springStiffness, 1.f, 2000.f);
-        ImGui::SliderFloat("Bend k",    &cloth.bendStiffness,   0.f, 500.f);
-        ImGui::SliderFloat("Air damp",  &cloth.airDamping,      0.f, 0.5f);
-        ImGui::SliderFloat("Spring damp",&cloth.springDamping,  0.f, 1.f);
-        ImGui::SliderFloat("Max stretch",&cloth.maxStretch,     1.f, 1.3f);
+        ImGui::SliderFloat("Bend k", &cloth.bendStiffness, 0.f, 500.f);
+        ImGui::SliderFloat("Air damp", &cloth.airDamping, 0.f, 0.5f);
+        ImGui::SliderFloat("Spring damp", &cloth.springDamping, 0.f, 1.f);
+        ImGui::SliderFloat("Max stretch", &cloth.maxStretch, 1.f, 1.3f);
         ImGui::SliderInt("Constraint iters", &cloth.constraintIters, 1, 40);
         ImGui::Separator();
 

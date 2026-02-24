@@ -14,7 +14,7 @@ constexpr int   CLOTH_COLS    = 30;
 constexpr float CLOTH_SPACING = 0.1f;
 
 // ── Physics defaults ─────────────────────────────────────────────────────────
-constexpr float DEFAULT_DT               = 1.f / 60.f;
+constexpr float DEFAULT_DELTA_TIME       = 1.f / 60.f;
 constexpr float DEFAULT_SPRING_STIFFNESS = 500.f;
 constexpr float DEFAULT_BEND_STIFFNESS   = 50.f;
 constexpr float DEFAULT_SPRING_DAMPING   = 0.1f;
@@ -31,8 +31,8 @@ constexpr float CAMERA_FOV  = 45.f;
 constexpr float CAMERA_NEAR = 0.01f;
 constexpr float CAMERA_FAR  = 100.f;
 
-inline const glm::vec3 DEFAULT_CAMERA_POS    = { 0.f,  1.f, 8.5f };
-inline const glm::vec3 DEFAULT_CAMERA_TARGET = { 0.f,  0.5f, 0.f };
+inline const glm::vec3 DEFAULT_CAMERA_POS    = { 0.f,  1.0f, 8.5f };
+inline const glm::vec3 DEFAULT_CAMERA_TARGET = { 0.f,  0.0f, 0.f };
 inline const glm::vec3 DEFAULT_CAMERA_UP     = { 0.f,  1.0f, 0.f };
 inline const glm::vec3 DEFAULT_LIGHT_POS     = { 2.f,  4.f,  3.f };
 inline const glm::vec3 DEFAULT_CLOTH_COLOR   = { 0.7f, 0.5f, 0.9f };
