@@ -6,11 +6,14 @@ A real-time cloth simulation written in **C++17** using **OpenGL 3.3**, **GLM**,
 
 ## Features
 
-- Mass-spring cloth (structural, shear, and bending springs)
-- Verlet integration with maximum-stretch constraint loop
+- Mass-spring cloth with structural, shear, and bending springs
+- Verlet integration with maximum-stretch constraint satisfaction
 - Cloth–sphere and cloth–self collision (marble algorithm)
-- Phong shading with optional normal-color debug mode
-- Full Dear ImGui panel — all physics parameters adjustable at runtime
+- **Phong shading** with per-vertex normal calculation (Blinn-Phong with double-sided lighting)
+- **Separate mesh and particle shaders** — Phong for triangles, flat color for particle debug visualization
+- Full Dear ImGui control panel — all physics and rendering parameters adjustable at runtime
+- Wireframe overlay mode
+- Adjustable particle size and light position
 
 ---
 
@@ -111,19 +114,18 @@ clothsim/
 │           └── gl.c
 │
 ├── src/
-│   ├── main.cpp
-│   ├── Cloth.h / Cloth.cpp
-│   ├── Particle.h
-│   ├── Spring.h
-│   ├── Renderer.h / Renderer.cpp
-│   ├── Shader.h / Shader.cpp
-│   └── UI.h / UI.cpp
+│   ├── main.cpp            # Entry point, render loop, ImGui UI
+│   ├── Cloth.h / Cloth.cpp # Cloth simulation (physics, springs, collisions)
+│   ├── Particle.h          # Particle struct (mass-spring data)
+│   ├── Spring.h            # Spring struct and SpringType enum
+│   ├── Shader.h            # Shader loading and uniform helpers
+│   ├── Constants.h         # Global constants (grid size, defaults, camera, lighting)
+│   ├── cloth.vert          # Particle shader: flat color points
+│   ├── cloth.frag          # Particle shader: flat color fragment
+│   ├── mesh.vert           # Mesh shader: Phong per-vertex lighting
+│   └── mesh.frag           # Mesh shader: Blinn-Phong per-fragment lighting
 │
-├── shaders/
-│   ├── cloth.vert
-│   └── cloth.frag
-│
-└── assets/
+└── assets/                 # Reserved for future use (textures, etc.)
 ```
 
 ---
@@ -200,9 +202,10 @@ endif()
 
 # Copy shaders next to the executable so relative paths work
 add_custom_command(TARGET clothsim POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_SOURCE_DIR}/shaders
-        $<TARGET_FILE_DIR:clothsim>/shaders
+    COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/src/*.vert
+        ${CMAKE_SOURCE_DIR}/src/*.frag
+        $<TARGET_FILE_DIR:clothsim>/
     COMMENT "Copying shaders to build directory"
 )
 ```
