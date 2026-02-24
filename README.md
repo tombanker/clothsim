@@ -52,7 +52,7 @@ brew install cmake
 ### 1. Clone the repo with submodules
 
 ```bash
-git clone --recursive https://github.com/YOUR_USERNAME/clothsim.git
+git clone --recursive https://github.com/tombanker/clothsim.git
 cd clothsim
 ```
 
