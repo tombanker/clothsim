@@ -117,6 +117,7 @@ void Cloth::addSpring(int a, int b, float stiffness, SpringType type)
 // MARK: Update (called once per frame)
 void Cloth::update(float deltaTime)
 {
+    globalTime += deltaTime;
     // STEP 1: Reset forces and apply Gravity
     // STEP 2: Apply spring forces
     applyForces();
@@ -142,6 +143,12 @@ void Cloth::applyForces()
 
         // Air damping
         p.force -= airDamping * p.velocity;
+
+        // Wind force (time-varying, oscillating)
+        if (windEnabled) {
+            float windMagnitude = windStrength * std::sin(globalTime * 2.f);
+            p.force += windDirection * windMagnitude * p.mass;
+        }
     }
 
     // Spring forces (Hooke's Law + damping)

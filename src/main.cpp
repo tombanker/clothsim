@@ -135,8 +135,9 @@ int main()
 
     // ── Shaders ──────────────────────────────────────────────────────────────
     Shader meshShader("mesh.vert", "mesh.frag");   // Phong shading for mesh
+    Shader normalWSShader("normalWS.vert", "normalWS.frag"); // World-space normal debug
     Shader particleShader("cloth.vert", "cloth.frag"); // flat color for particles
-    if (meshShader.ID == 0 || particleShader.ID == 0) {
+    if (meshShader.ID == 0 || normalWSShader.ID == 0 || particleShader.ID == 0) {
         std::cerr << "Failed to load shaders!\n";
         return -1;
     }
@@ -163,6 +164,7 @@ int main()
     bool  showMesh    = true;
     bool  wireframe   = false;
     bool  showParticles = false;
+    bool  normalDebugMode = false;
     float particleSize = DEFAULT_POINT_SIZE;
     float bgColor[3]  = { 0.1f, 0.1f, 0.1f };
     float deltaTime          = DEFAULT_DELTA_TIME;
@@ -258,12 +260,18 @@ int main()
         ImGui::SliderFloat("Spring damp", &cloth.springDamping, 0.f, 1.f);
         ImGui::SliderFloat("Max stretch", &cloth.maxStretch, 1.f, 1.3f);
         ImGui::SliderInt("Constraint iters", &cloth.constraintIters, 1, 40);
+        ImGui::Checkbox("Wind", &cloth.windEnabled);
+        ImGui::BeginDisabled(!cloth.windEnabled);
+        ImGui::SliderFloat("Wind strength", &cloth.windStrength, 0.f, 20.f);
+        ImGui::SliderFloat3("Wind dir", glm::value_ptr(cloth.windDirection), -1.f, 1.f);
+        ImGui::EndDisabled();
         ImGui::Separator();
 
         ImGui::Text("Display");
         ImGui::Checkbox("Show mesh", &showMesh);
         ImGui::BeginDisabled(!showMesh);
         ImGui::Checkbox("Wireframe", &wireframe);
+        ImGui::Checkbox("Normal debug", &normalDebugMode);
         ImGui::EndDisabled();
         ImGui::Checkbox("Show particles", &showParticles);
         ImGui::SliderFloat("Particle size", &particleSize, 0.5f, 15.f);
@@ -280,14 +288,20 @@ int main()
         glClearColor(bgColor[0], bgColor[1], bgColor[2], 1.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Render mesh with Phong shading
+        // Render mesh with Phong shading or normal debug
         if (showMesh) {
-            meshShader.use();
-            meshShader.setMat4("uMVP", MVP);
-            meshShader.setMat4("uModel", model);
-            meshShader.setVec3("uColor", DEFAULT_CLOTH_COLOR);
-            meshShader.setVec3("uLightPos", lightPos);
-            meshShader.setVec3("uViewPos", cameraPos);
+            if (normalDebugMode) {
+                normalWSShader.use();
+                normalWSShader.setMat4("uMVP", MVP);
+                normalWSShader.setMat4("uModel", model);
+            } else {
+                meshShader.use();
+                meshShader.setMat4("uMVP", MVP);
+                meshShader.setMat4("uModel", model);
+                meshShader.setVec3("uColor", DEFAULT_CLOTH_COLOR);
+                meshShader.setVec3("uLightPos", lightPos);
+                meshShader.setVec3("uViewPos", cameraPos);
+            }
             if (wireframe)
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glBindVertexArray(clothVAO);

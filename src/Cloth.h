@@ -39,6 +39,11 @@ public:
     float     maxStretch      = DEFAULT_MAX_STRETCH;
     float     maxCompress     = DEFAULT_MAX_COMPRESS;
     int       constraintIters = DEFAULT_CONSTRAINT_ITERS;
+    // Wind
+    bool      windEnabled     = false;
+    float     windStrength    = DEFAULT_WIND_STRENGTH;
+    glm::vec3 windDirection   = DEFAULT_WIND_DIRECTION;
+    float     globalTime      = 0.f;  // accumulated time for wind animation
 
 private:
     // Helper: flat index from (row, col)
