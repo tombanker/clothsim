@@ -31,8 +31,8 @@ public:
     int getCols() const { return cols; }
 
     // Simulation parameters (public so ImGui can write to them directly)
-    glm::vec3 gravity         = { 0.f, -9.8f, 0.f };
-    float     airDamping      = 0.01f;
+    glm::vec3 gravity         = DEFAULT_GRAVITY;
+    float     airDamping      = DEFAULT_AIR_DAMPING;
     float     springStiffness = DEFAULT_SPRING_STIFFNESS;
     float     bendStiffness   = DEFAULT_BEND_STIFFNESS;
     float     springDamping   = DEFAULT_SPRING_DAMPING;
