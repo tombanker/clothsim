@@ -6,6 +6,7 @@
 #include "imgui_impl_opengl3.h"
 
 #include "Cloth.h"
+#include "Shader.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -13,70 +14,6 @@
 
 #include <iostream>
 #include <vector>
-
-// ── Shaders ──────────────────────────────────────────────────────────────────
-// Simple MVP transform — just positions, flat white color for now.
-// Will be replaced by Phong shaders in Phase 4.
-static const char* VERT_SRC = R"(
-#version 330 core
-layout(location = 0) in vec3 aPos;
-
-uniform mat4 uMVP;
-
-void main()
-{
-    gl_Position = uMVP * vec4(aPos, 1.0);
-    gl_PointSize = 1.0;
-}
-)";
-
-static const char* FRAG_SRC = R"(
-#version 330 core
-out vec4 FragColor;
-
-uniform vec3 uColor;
-
-void main()
-{
-    FragColor = vec4(uColor, 1.0);
-}
-)";
-
-// ── Shader helpers ───────────────────────────────────────────────────────────
-static GLuint compileShader(GLenum type, const char* src)
-{
-    GLuint shader = glCreateShader(type);
-    glShaderSource(shader, 1, &src, nullptr);
-    glCompileShader(shader);
-    GLint ok;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &ok);
-    if (!ok) {
-        char log[512];
-        glGetShaderInfoLog(shader, 512, nullptr, log);
-        std::cerr << "Shader compile error:\n" << log << "\n";
-    }
-    return shader;
-}
-
-static GLuint buildProgram(const char* vertSrc, const char* fragSrc)
-{
-    GLuint vert = compileShader(GL_VERTEX_SHADER,   vertSrc);
-    GLuint frag = compileShader(GL_FRAGMENT_SHADER, fragSrc);
-    GLuint prog = glCreateProgram();
-    glAttachShader(prog, vert);
-    glAttachShader(prog, frag);
-    glLinkProgram(prog);
-    GLint ok;
-    glGetProgramiv(prog, GL_LINK_STATUS, &ok);
-    if (!ok) {
-        char log[512];
-        glGetProgramInfoLog(prog, 512, nullptr, log);
-        std::cerr << "Program link error:\n" << log << "\n";
-    }
-    glDeleteShader(vert);
-    glDeleteShader(frag);
-    return prog;
-}
 
 // ── Callbacks ────────────────────────────────────────────────────────────────
 void framebuffer_size_callback(GLFWwindow* /*window*/, int width, int height)
@@ -163,9 +100,12 @@ int main()
     glBindVertexArray(0);
 
     // ── Shader ───────────────────────────────────────────────────────────────
-    GLuint shader  = buildProgram(VERT_SRC, FRAG_SRC);
-    GLint  locMVP  = glGetUniformLocation(shader, "uMVP");
-    GLint  locColor = glGetUniformLocation(shader, "uColor");
+    Shader clothShader("cloth.vert", "cloth.frag");
+    if (clothShader.ID == 0) {
+        std::cerr << "Failed to load shaders!\n";
+        return -1;
+    }
+    std::cout << "Shaders initialized successfully\n";
 
     // ── Camera / projection ──────────────────────────────────────────────────
     // Simple fixed camera looking at the cloth from a slight angle.
@@ -270,17 +210,17 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         if (showParticles) {
-            glUseProgram(shader);
-            glUniformMatrix4fv(locMVP, 1, GL_FALSE, glm::value_ptr(MVP));
+            clothShader.use();
+            clothShader.setMat4("uMVP", MVP);
 
             // All particles — white
-            glUniform3f(locColor, 1.f, 1.f, 1.f);
+            clothShader.setVec3("uColor", glm::vec3(1.f, 1.f, 1.f));
             glBindVertexArray(pointVAO);
             glDrawArrays(GL_POINTS, 0, (GLsizei)particles.size());
 
             // Pinned particles — red, drawn from their own VAO
             if (!pinnedData.empty()) {
-                glUniform3f(locColor, 1.f, 0.2f, 0.2f);
+                clothShader.setVec3("uColor", glm::vec3(1.f, 0.2f, 0.2f));
                 glBindVertexArray(pinnedVAO);
                 glDrawArrays(GL_POINTS, 0, (GLsizei)(pinnedData.size() / 3));
             }
@@ -299,7 +239,7 @@ int main()
     glDeleteBuffers(1, &pointVBO);
     glDeleteVertexArrays(1, &pinnedVAO);
     glDeleteBuffers(1, &pinnedVBO);
-    glDeleteProgram(shader);
+    // Shader will be cleaned up by its destructor
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

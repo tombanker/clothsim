@@ -165,7 +165,7 @@ target_include_directories(imgui PUBLIC
 target_link_libraries(imgui PUBLIC glfw)
 
 # ── GLAD ──────────────────────────────────────────────────────────────────────
-add_library(glad STATIC external/glad/src/gl.c)
+add_library(glad STATIC external/glad/src/glad.c)
 target_include_directories(glad PUBLIC external/glad/include)
 
 # ── Main executable ───────────────────────────────────────────────────────────

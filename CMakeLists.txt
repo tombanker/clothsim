@@ -1,4 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
+
+# Set macOS deployment target BEFORE project() call
+if(APPLE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0" CACHE STRING "Minimum macOS version")
+endif()
+
 project(clothsim LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -34,9 +40,16 @@ add_library(glad STATIC external/glad/src/glad.c)
 target_include_directories(glad PUBLIC external/glad/include)
 
 # ── Main executable ───────────────────────────────────────────────────────────
-file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.h)
+file(GLOB CPP_FILES src/*.cpp)
+file(GLOB HEADER_FILES src/*.h)
+file(GLOB SHADER_FILES src/*.vert src/*.frag)
 
-add_executable(clothsim ${SRC_FILES})
+add_executable(clothsim ${CPP_FILES} ${HEADER_FILES} ${SHADER_FILES})
+
+# Pass the project source directory to the executable
+target_compile_definitions(clothsim PRIVATE
+    PROJECT_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+)
 
 target_include_directories(clothsim PRIVATE
     src/
@@ -45,6 +58,11 @@ target_include_directories(clothsim PRIVATE
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
 )
+
+# Organize sources in Xcode
+source_group("Headers" FILES ${HEADER_FILES})
+source_group("Source Files" FILES ${CPP_FILES})
+source_group("Shaders" FILES ${SHADER_FILES})
 
 target_link_libraries(clothsim PRIVATE
     glfw
@@ -62,11 +80,3 @@ if(APPLE)
         "-framework CoreVideo"
     )
 endif()
-
-# Copy shaders next to the executable so relative paths work
-add_custom_command(TARGET clothsim POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_SOURCE_DIR}/shaders
-        $<TARGET_FILE_DIR:clothsim>/shaders
-    COMMENT "Copying shaders to build directory"
-)
