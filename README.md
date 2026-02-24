@@ -11,9 +11,12 @@ A real-time cloth simulation written in **C++17** using **OpenGL 3.3**, **GLM**,
 - Cloth–sphere and cloth–self collision (marble algorithm)
 - **Phong shading** with per-vertex normal calculation (Blinn-Phong with double-sided lighting)
 - **Separate mesh and particle shaders** — Phong for triangles, flat color for particle debug visualization
+- **World-space normal debug visualizer** — see normal directions as RGB colors
+- **Wind force** — oscillating (sine-wave) or static direction
 - Full Dear ImGui control panel — all physics and rendering parameters adjustable at runtime
 - Wireframe overlay mode
-- Adjustable particle size and light position
+- Adjustable particle size, light position, constraint iterations
+- Real-time performance tuning
 
 ---
 
@@ -130,7 +133,24 @@ clothsim/
 
 ---
 
-## CMakeLists.txt
+## Performance & Resolution Trade-offs
+
+| Resolution | Particles | Triangles | Approx FPS | Notes |
+|-----------|-----------|-----------|-----------|-------|
+| 30×30 | 900 | 1,682 | 60+ | Very fast, coarse normals |
+| 40×40 | 1,600 | 2,978 | 45-50 | Sweet spot for real-time |
+| 50×50 | 2,500 | 4,802 | 30-35 | Smooth normals, higher detail |
+| 60×60 | 3,600 | 6,882 | 15-20 | Very detailed, slower |
+
+**Tuning for Performance:**
+- Reduce **constraint iterations** (ImGui slider) — lower = faster but looser cloth
+- Disable **wind** if not needed
+- Lower **delta time** slider may help framerate stability
+- Use 40×40 as default, increase for screenshot quality
+
+---
+
+
 
 Below is the full `CMakeLists.txt` for the project. Copy this to the root of the repo.
 
